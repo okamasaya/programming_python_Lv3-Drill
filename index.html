@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>プロ検レベル3 演習システム</title>
+    <style>
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; background-color: #f4f6f9; color: #333; margin: 0; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; display: flex; gap: 20px; }
+        .start-screen { max-width: 600px; margin: 80px auto; background: #fff; padding: 40px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: center; }
+        .start-title { font-size: 24px; font-weight: bold; margin-bottom: 20px; color: #1e3a8a; }
+        .start-info { background-color: #f8f9fa; padding: 20px; border-radius: 8px; text-align: left; margin-bottom: 30px; line-height: 1.8; color: #4a5568; }
+        .main-panel { flex: 3; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); position: relative; }
+        .side-panel { flex: 1; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 15px; }
+        .header-area { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px; margin-bottom: 20px; }
+        h1 { font-size: 20px; color: #1a1a1a; margin: 0; }
+        .timer-display { font-size: 24px; font-weight: bold; color: #e53e3e; font-family: monospace; background: #fee2e2; padding: 4px 12px; border-radius: 6px; }
+        .category-tag { font-size: 14px; color: #1e3a8a; font-weight: bold; margin-bottom: 10px; }
+        .question-box { margin-top: 10px; }
+        .question { font-size: 18px; font-weight: bold; line-height: 1.6; margin-bottom: 25px; white-space: pre-wrap; font-family: Consolas, Monaco, 'Courier New', Courier, monospace, sans-serif; }
+        
+         
+        .option-btn { background-color: #f8f9fa; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 16px; cursor: pointer; transition: all 0.2s ease; box-sizing: border-box; }
+        .option-btn:hover:not(:disabled) { background-color: #edf2f7; border-color: #cbd5e0; }
+        .option-btn.selected { background-color: #ebf8ff !important; border-color: #3182ce !important; color: #2b6cb0; font-weight: bold; }
+        .option-btn.correct { background-color: #dcfce7 !important; border-color: #22c55e !important; color: #15803d; font-weight: bold; }
+        .option-btn.incorrect { background-color: #fee2e2 !important; border-color: #ef4444 !important; color: #b91c1c; }
+
+         
+        .options.layout-normal { display: flex; flex-direction: column; gap: 12px; }
+        .options.layout-normal .option-btn { display: flex; align-items: flex-start; gap: 14px; padding: 14px 20px; text-align: left; }
+        .options.layout-normal .option-num { background-color: #e2e8f0; color: #1e3a8a; padding: 2px 8px; border-radius: 4px; font-size: 14px; font-weight: bold; flex-shrink: 0; }
+        .options.layout-normal .option-text { flex-grow: 1; white-space: pre-wrap; font-family: Consolas, Monaco, 'Courier New', Courier, monospace, sans-serif; }
+
+         
+        .options.layout-grid { display: grid; grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(2, 1fr); gap: 16px; width: 100%; aspect-ratio: 1 / 1; max-width: 600px; margin: 0 auto 25px auto; }
+        .options.layout-grid .option-btn { height: 100%; display: flex; flex-direction: column; justify-content: flex-start; align-items: flex-start; position: relative; padding: 45px 16px 16px 16px; text-align: left; }
+        .options.layout-grid .option-num { position: absolute; top: 12px; left: 12px; background-color: #1e3a8a; color: white; padding: 2px 8px; border-radius: 4px; font-size: 14px; font-weight: bold; }
+        .options.layout-grid .option-text { width: 100%; height: 100%; white-space: pre-wrap; font-family: Consolas, Monaco, 'Courier New', Courier, monospace, sans-serif; overflow-y: auto; }
+
+        .feedback-panel { margin-top: 20px; padding: 15px; border-radius: 6px; display: none; line-height: 1.6; white-space: pre-wrap; border-left: 4px solid #3182ce; background: #f8fafc; font-family: Consolas, Monaco, 'Courier New', Courier, monospace, sans-serif; }
+        .control-box { display: flex; justify-content: space-between; margin-top: 40px; gap: 10px; }
+        .nav-btn { background-color: #718096; color: white; border: none; border-radius: 6px; padding: 12px 24px; font-size: 15px; font-weight: bold; cursor: pointer; }
+        .nav-btn:hover { background-color: #4a5568; }
+        .flag-btn { background-color: #fff; color: #dd6b20; border: 2px solid #dd6b20; border-radius: 6px; padding: 10px 15px; font-size: 15px; font-weight: bold; cursor: pointer; }
+        .flag-btn.flagged { background-color: #feebc8; }
+        .submit-btn { background-color: #e53e3e; color: white; padding: 14px; }
+        .submit-btn:hover { background-color: #c53030; }
+        .palette-title { font-weight: bold; font-size: 15px; color: #4a5568; }
+        .palette-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+        .palette-item { border: 1px solid #cbd5e0; border-radius: 4px; padding: 8px 0; text-align: center; font-size: 14px; font-weight: bold; cursor: pointer; background-color: #fff; position: relative; }
+        .palette-item.answered { background-color: #cbd5e0; color: #4a5568; }
+        .palette-item.current { border: 2px solid #3182ce; color: #3182ce; }
+        .palette-item.flagged::after { content: "🚩"; position: absolute; top: -6px; right: -4px; font-size: 10px; }
+        .score-screen { display: none; width: 100%; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .score-num { text-align: center; font-size: 44px; font-weight: bold; color: #3182ce; margin: 20px 0; }
+        .review-item { background: #f8f9fa; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-bottom: 15px; text-align: left; font-family: Consolas, Monaco, 'Courier New', Courier, monospace, sans-serif; }
+        .review-q { font-weight: bold; margin-bottom: 8px; }
+        .review-status-correct { color: #38a169; font-weight: bold; }
+        .review-status-incorrect { color: #e53e3e; font-weight: bold; }
+        .review-ans { font-size: 14px; margin: 4px 0; }
+        .review-rationale { font-size: 14px; background: #fff; padding: 10px; border-radius: 4px; margin-top: 8px; border-left: 3px solid #3182ce; color: #4a5568; }
+        .report-area { width: 100%; height: 200px; font-family: monospace; padding: 10px; box-sizing: border-box; margin-top: 15px; border-radius: 6px; border: 1px solid #cbd5e1; background: #f8fafc; }
+        .toast { display: none; position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background-color: #333; color: #fff; padding: 12px 24px; border-radius: 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); font-size: 15px; z-index: 1000; opacity: 0; transition: opacity 0.3s ease; }
+    </style>
+</head>
+<body>
+
+<div id="toast-message" class="toast"></div>
+
+<div id="start-container" class="start-screen">
+    <div class="start-title" id="title-display">プロ検レベル3 演習システム</div>
+    <div class="start-info" id="description-display"></div>
+    
+    <div style="margin-bottom: 25px; text-align: center;">
+        <div style="background: #f8fafc; padding: 15px; border-radius: 6px; border: 1px solid #e2e8f0; display: inline-block; text-align: left; margin: 5px;">
+            <label for="question-count-select" style="font-weight: bold; margin-right: 10px; color: #475569;">出題問題数:</label>
+            <select id="question-count-select" style="padding: 8px 16px; font-size: 15px; border-radius: 6px; border: 1px solid #cbd5e1; background: white; cursor: pointer;">
+                <option value="all" selected>全問出題</option>
+                <option value="10">10問</option>
+                <option value="20">20問</option>
+                <option value="30">30問</option>
+                <option value="50">50問</option>
+            </select>
+        </div>
+        
+        <div id="category-select-container" style="background: #f8fafc; padding: 15px; border-radius: 6px; border: 1px solid #e2e8f0; display: none; text-align: left; margin: 5px;">
+            <label for="category-select" style="font-weight: bold; margin-right: 10px; color: #475569;">出題カテゴリ:</label>
+            <select id="category-select" style="padding: 8px 16px; font-size: 15px; border-radius: 6px; border: 1px solid #cbd5e1; background: white; cursor: pointer;">
+                <option value="all" selected>全カテゴリ</option>
+            </select>
+        </div>
+    </div>
+    <br>
+    <button class="nav-btn submit-btn" style="width: 100%; font-size: 18px; background-color: #1e3a8a;" onclick="startExam()">演習を開始する</button>
+</div>
+
+<div class="container" id="exam-container" style="display: none;">
+    <div class="main-panel">
+        <div class="header-area">
+            <h1 id="progress">問題 1 / --</h1>
+            <div class="timer-display" id="timer">00:00</div>
+        </div>
+
+        <div class="question-box">
+            <div id="category-display" class="category-tag">【カテゴリ】</div>
+            <div class="question" id="question-text">読み込み中...</div>
+            <div id="options-container"></div>
+            <div id="instant-feedback" class="feedback-panel"></div>
+        </div>
+
+        <div class="control-box">
+            <button class="nav-btn" onclick="prevQuestion()">前の問題へ</button>
+            <button class="flag-btn" id="flag-button" onclick="toggleFlag()">🚩 あとで確認</button>
+            <button class="nav-btn" id="next-button" onclick="nextQuestion()">次の問題へ</button>
+        </div>
+    </div>
+
+    <div class="side-panel" id="sidebar-panel">
+        <div class="palette-title">問題一覧</div>
+        <div class="palette-grid" id="palette-grid"></div>
+        <hr style="border: 0; border-top: 1px solid #e2e8f0; width: 100%; margin: 10px 0;">
+        <button class="nav-btn submit-btn" id="finish-btn" style="width: 100%; margin: 0;" onclick="submitExam(false)">演習を終了して採点</button>
+    </div>
+</div>
+
+<div class="container" id="score-container" style="display: none;">
+    <div class="score-screen" style="display: block;">
+        <h1>演習結果・レポート発表</h1>
+        <div class="score-num" id="final-score">0 / --</div>
+        <p style="text-align: center; color: #4a5568;">お疲れ様でした！解説の確認と、AIメンターへのレポートコピーが可能です。</p>
+        
+        <button class="nav-btn" style="background-color: #3182ce; width: 100%; padding: 12px; margin-bottom: 10px;" onclick="copyReport()">レポートをクリップボードにコピー</button>
+        <textarea id="report-text" class="report-area" readonly></textarea>
+
+        <h2>正誤と解説の確認</h2>
+        <div id="review-list"></div>
+
+        <button class="nav-btn" onclick="location.reload()" style="background-color: #718096; width: 100%; padding: 12px; margin-top: 20px;">もう一度最初から挑戦する</button>
+    </div>
+</div>
+
+<script type="application/json" id="raw-config">{"mode":"practice","timeLimit":60,"layout":"grid"}</script>
+<script type="application/json" id="raw-questions">[{"id":"PROKEN3_PY_001","category":"IF_BRANCH","question":"以下のプログラムを実行したとき、標準出力に出力される文字列として正しいものを選びなさい。\n\n\nscore = 75\n\nattendance = 80\n\nif score >= 80 and attendance >= 80:\n\nprint(\"A\")\n\nelif score >= 70 or attendance >= 90:\n\nprint(\"B\")\n\nelse:\n\nprint(\"C\")","options":[{"text":"A","isCorrect":false,"rationale":"- 「B」: scoreが75で70以上のため、elifの条件（片方が正しければ良い）が成り立ち出力されます。\n\n- 「A」: and条件は両方が80以上である必要がありますが、scoreが75なので成り立ちません。\n\n- 「C」: elifの条件がすでに成り立っているため、elseの処理は行われません。\n\n- 「エラーが発生する」: プログラムは正しい文法で書かれているためエラーにはなりません。"},{"text":"B","isCorrect":true,"rationale":"- 「B」: scoreが75で70以上のため、elifの条件（片方が正しければ良い）が成り立ち出力されます。\n\n- 「A」: and条件は両方が80以上である必要がありますが、scoreが75なので成り立ちません。\n\n- 「C」: elifの条件がすでに成り立っているため、elseの処理は行われません。\n\n- 「エラーが発生する」: プログラムは正しい文法で書かれているためエラーにはなりません。"},{"text":"C","isCorrect":false,"rationale":"- 「B」: scoreが75で70以上のため、elifの条件（片方が正しければ良い）が成り立ち出力されます。\n\n- 「A」: and条件は両方が80以上である必要がありますが、scoreが75なので成り立ちません。\n\n- 「C」: elifの条件がすでに成り立っているため、elseの処理は行われません。\n\n- 「エラーが発生する」: プログラムは正しい文法で書かれているためエラーにはなりません。"},{"text":"エラーが発生する","isCorrect":false,"rationale":"- 「B」: scoreが75で70以上のため、elifの条件（片方が正しければ良い）が成り立ち出力されます。\n\n- 「A」: and条件は両方が80以上である必要がありますが、scoreが75なので成り立ちません。\n\n- 「C」: elifの条件がすでに成り立っているため、elseの処理は行われません。\n\n- 「エラーが発生する」: プログラムは正しい文法で書かれているためエラーにはなりません。"}]},{"id":"PROKEN3_PY_002","category":"LOOP_TOTAL","question":"以下のプログラムを実行したとき、標準出力に出力される値として正しいものを選びなさい。\n\n\ntotal = 0\n\ni = 0\n\nwhile i < 5:\n\ni += 1\n\nif i == 3:\n\ncontinue\n\ntotal += i\n\nprint(total)","options":[{"text":"15","isCorrect":false,"rationale":"- 「12」: iが3のときにcontinueによってtotalへの加算がスキップされるため、1+2+4+5の合計である12となります。\n\n- 「15」: continueによるスキップを行わず、1から5までをすべて足してしまった場合の数値です。\n\n- 「10」: iが3のときにループが終了（break）してしまった場合の数値です。\n\n- 「9」: ループの回数や加算のタイミングを取り違えた場合の数値です。"},{"text":"12","isCorrect":true,"rationale":"- 「12」: iが3のときにcontinueによってtotalへの加算がスキップされるため、1+2+4+5の合計である12となります。\n\n- 「15」: continueによるスキップを行わず、1から5までをすべて足してしまった場合の数値です。\n\n- 「10」: iが3のときにループが終了（break）してしまった場合の数値です。\n\n- 「9」: ループの回数や加算のタイミングを取り違えた場合の数値です。"},{"text":"10","isCorrect":false,"rationale":"- 「12」: iが3のときにcontinueによってtotalへの加算がスキップされるため、1+2+4+5の合計である12となります。\n\n- 「15」: continueによるスキップを行わず、1から5までをすべて足してしまった場合の数値です。\n\n- 「10」: iが3のときにループが終了（break）してしまった場合の数値です。\n\n- 「9」: ループの回数や加算のタイミングを取り違えた場合の数値です。"},{"text":"9","isCorrect":false,"rationale":"- 「12」: iが3のときにcontinueによってtotalへの加算がスキップされるため、1+2+4+5の合計である12となります。\n\n- 「15」: continueによるスキップを行わず、1から5までをすべて足してしまった場合の数値です。\n\n- 「10」: iが3のときにループが終了（break）してしまった場合の数値です。\n\n- 「9」: ループの回数や加算のタイミングを取り違えた場合の数値です。"}]},{"id":"PROKEN3_PY_003","category":"LIST_OPER","question":"以下のプログラムを実行したとき、標準出力に出力される値として正しいものを選びなさい。\n\n\nnumbers = [10, 20, 30, 40, 50]\n\nsub_list = numbers[1:4]\n\nsub_list.append(60)\n\nprint(len(sub_list))","options":[{"text":"3","isCorrect":false,"rationale":"- 「4」: スライス[1:4]によって[20, 30, 40]の3つの要素が取り出され、appendで60が追加されて4つになるため、lenは4になります。\n\n- 「3」: appendによる要素の追加を計算に入れなかった場合の数値です。\n\n- 「5」: 元のリストの要素数や、スライスの終了位置を含めると誤認した場合の数値です。\n\n- 「6」: 元のリストの要素数にappendされた分を足してしまった場合の数値です。"},{"text":"4","isCorrect":true,"rationale":"- 「4」: スライス[1:4]によって[20, 30, 40]の3つの要素が取り出され、appendで60が追加されて4つになるため、lenは4になります。\n\n- 「3」: appendによる要素の追加を計算に入れなかった場合の数値です。\n\n- 「5」: 元のリストの要素数や、スライスの終了位置を含めると誤認した場合の数値です。\n\n- 「6」: 元のリストの要素数にappendされた分を足してしまった場合の数値です。"},{"text":"5","isCorrect":false,"rationale":"- 「4」: スライス[1:4]によって[20, 30, 40]の3つの要素が取り出され、appendで60が追加されて4つになるため、lenは4になります。\n\n- 「3」: appendによる要素の追加を計算に入れなかった場合の数値です。\n\n- 「5」: 元のリストの要素数や、スライスの終了位置を含めると誤認した場合の数値です。\n\n- 「6」: 元のリストの要素数にappendされた分を足してしまった場合の数値です。"},{"text":"6","isCorrect":false,"rationale":"- 「4」: スライス[1:4]によって[20, 30, 40]の3つの要素が取り出され、appendで60が追加されて4つになるため、lenは4になります。\n\n- 「3」: appendによる要素の追加を計算に入れなかった場合の数値です。\n\n- 「5」: 元のリストの要素数や、スライスの終了位置を含めると誤認した場合の数値です。\n\n- 「6」: 元のリストの要素数にappendされた分を足してしまった場合の数値です。"}]},{"id":"PROKEN3_PY_004","category":"FUNC_BASIC","question":"以下のプログラムを実行したとき、標準出力に出力される値として正しいものを選びなさい。\n\n\ndef calc(x, y):\n\nif x > y:\n\nreturn x - y\n\nreturn y - x\n\n\nresult = calc(5, 8)\n\nprint(result)","options":[{"text":"-3","isCorrect":false,"rationale":"- 「3」: 引数xに5、yに8が渡されます。5 > 8は成り立たないため、下のreturn y - xが実行され、8 - 5の結果である3が返されます。\n\n- 「-3」: 条件分岐の判定を誤り、x - y（5 - 8）が実行されたと仮定した場合の数値です。\n\n- 「13」: 引き算ではなく足し算をしてしまった場合の数値です。\n\n- 「None」: 関数から値が返されないと誤認した場合の表示です。"},{"text":"3","isCorrect":true,"rationale":"- 「3」: 引数xに5、yに8が渡されます。5 > 8は成り立たないため、下のreturn y - xが実行され、8 - 5の結果である3が返されます。\n\n- 「-3」: 条件分岐の判定を誤り、x - y（5 - 8）が実行されたと仮定した場合の数値です。\n\n- 「13」: 引き算ではなく足し算をしてしまった場合の数値です。\n\n- 「None」: 関数から値が返されないと誤認した場合の表示です。"},{"text":"13","isCorrect":false,"rationale":"- 「3」: 引数xに5、yに8が渡されます。5 > 8は成り立たないため、下のreturn y - xが実行され、8 - 5の結果である3が返されます。\n\n- 「-3」: 条件分岐の判定を誤り、x - y（5 - 8）が実行されたと仮定した場合の数値です。\n\n- 「13」: 引き算ではなく足し算をしてしまった場合の数値です。\n\n- 「None」: 関数から値が返されないと誤認した場合の表示です。"},{"text":"None","isCorrect":false,"rationale":"- 「3」: 引数xに5、yに8が渡されます。5 > 8は成り立たないため、下のreturn y - xが実行され、8 - 5の結果である3が返されます。\n\n- 「-3」: 条件分岐の判定を誤り、x - y（5 - 8）が実行されたと仮定した場合の数値です。\n\n- 「13」: 引き算ではなく足し算をしてしまった場合の数値です。\n\n- 「None」: 関数から値が返されないと誤認した場合の表示です。"}]},{"id":"PROKEN3_PY_005","category":"LIST_OPER","question":"以下のプログラムを実行したとき、標準出力に出力される値として正しいものを選びなさい。\n\n\nitems = [5, 12, 7, 20, 3]\n\ncount = 0\n\nfor num in items:\n\nif num % 2 == 0:\n\ncount += num\n\nprint(count)","options":[{"text":"47","isCorrect":false,"rationale":"- 「32」: リスト内の偶数（12と20）だけが条件「num % 2 == 0」を満たし、countに足されるため、12 + 20 で 32 となります。\n\n- 「47」: リスト内のすべての数値を合計してしまった場合の数値です。\n\n- 「15」: 奇数（5、7、3）だけを合計してしまった場合の数値です。\n\n- 「2」: 合計値ではなく、偶数の「個数」を数えてしまった場合の数値です。"},{"text":"32","isCorrect":true,"rationale":"- 「32」: リスト内の偶数（12と20）だけが条件「num % 2 == 0」を満たし、countに足されるため、12 + 20 で 32 となります。\n\n- 「47」: リスト内のすべての数値を合計してしまった場合の数値です。\n\n- 「15」: 奇数（5、7、3）だけを合計してしまった場合の数値です。\n\n- 「2」: 合計値ではなく、偶数の「個数」を数えてしまった場合の数値です。"},{"text":"15","isCorrect":false,"rationale":"- 「32」: リスト内の偶数（12と20）だけが条件「num % 2 == 0」を満たし、countに足されるため、12 + 20 で 32 となります。\n\n- 「47」: リスト内のすべての数値を合計してしまった場合の数値です。\n\n- 「15」: 奇数（5、7、3）だけを合計してしまった場合の数値です。\n\n- 「2」: 合計値ではなく、偶数の「個数」を数えてしまった場合の数値です。"},{"text":"2","isCorrect":false,"rationale":"- 「32」: リスト内の偶数（12と20）だけが条件「num % 2 == 0」を満たし、countに足されるため、12 + 20 で 32 となります。\n\n- 「47」: リスト内のすべての数値を合計してしまった場合の数値です。\n\n- 「15」: 奇数（5、7、3）だけを合計してしまった場合の数値です。\n\n- 「2」: 合計値ではなく、偶数の「個数」を数えてしまった場合の数値です。"}]}]</script>
+
+<script>
+const appConfig = JSON.parse(document.getElementById("raw-config").textContent);
+const originalQuizData = JSON.parse(document.getElementById("raw-questions").textContent);
+
+let quizData = [];
+let currentQuestionIndex = 0;
+let userAnswers = {}; 
+let flaggedQuestions = {};
+let timerInterval = null;
+let timeRemaining = 0;
+let examStartTime = 0; 
+
+function showToast(message) {
+    const toast = document.getElementById("toast-message");
+    toast.innerText = message;
+    toast.style.display = "block";
+    setTimeout(() => { toast.style.opacity = "1"; }, 10);
+    
+    setTimeout(() => {
+        toast.style.opacity = "0";
+        setTimeout(() => { toast.style.display = "none"; }, 300);
+    }, 2500);
+}
+
+function startExamTimer() {
+    if (timerInterval) clearInterval(timerInterval);
+    updateTimerDisplay();
+    timerInterval = setInterval(() => {
+        timeRemaining--;
+        updateTimerDisplay();
+        
+        if (timeRemaining <= 0) {
+            clearInterval(timerInterval);
+            showToast("制限時間になりました。自動的に採点を行います。");
+            setTimeout(() => { submitExam(true); }, 1500); 
+        }
+    }, 1000);
+}
+
+function updateTimerDisplay() {
+    const minutes = Math.floor(timeRemaining / 60);
+    const seconds = timeRemaining % 60;
+    document.getElementById("timer").innerText = 
+        `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
+function formatText(text) {
+    
+    if (text === null || text === undefined || text === "") {
+        return "";
+    }
+    
+    
+    
+    let escaped = String(text)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    
+    
+    escaped = escaped.replace(/&lt;br\s*\/?&gt;/gi, "<br>");
+    escaped = escaped.replace(/&lt;u&gt;/gi, "<u>").replace(/&lt;\/u&gt;/gi, "</u>");
+    escaped = escaped.replace(/&lt;b&gt;/gi, "<b>").replace(/&lt;\/b&gt;/gi, "</b>");
+    escaped = escaped.replace(/&lt;strong&gt;/gi, "<strong>").replace(/&lt;\/strong&gt;/gi, "</strong>");
+    
+    
+    escaped = escaped.replace(/\n/g, "<br>");
+    
+    return escaped;
+}
+
+function generateCategoryOptions() {
+    const categorySelect = document.getElementById("category-select");
+    const categories = originalQuizData.map(q => q.category ? q.category.toString() : "未分類");
+    const uniqueCategories = [...new Set(categories)].filter(Boolean).sort();
+    
+    uniqueCategories.forEach(cat => {
+        const option = document.createElement("option");
+        option.value = cat;
+        option.textContent = cat;
+        categorySelect.appendChild(option);
+    });
+}
+
+window.onload = function() {
+    if (appConfig.mode === "practice") {
+        document.getElementById("description-display").innerHTML = "一問一答形式の演習です。解答したその場で正誤と解説が表示されます。<br>（制限時間なし・マイペース演習）";
+        document.getElementById("timer").style.display = "none";
+        document.getElementById("sidebar-panel").style.display = "none";
+        document.getElementById("flag-button").style.display = "none";
+        
+        document.getElementById("category-select-container").style.display = "inline-block";
+        generateCategoryOptions();
+        
+        const ctrlBox = document.querySelector(".control-box");
+        const pBtn = document.createElement("button");
+        pBtn.className = "nav-btn submit-btn";
+        pBtn.innerText = "演習を終了して採点";
+        pBtn.onclick = function() { submitExam(false); }; 
+        ctrlBox.appendChild(pBtn);
+    } else {
+        document.getElementById("description-display").innerHTML = `本番と同様の形式で一括採点を行います。<br>制限時間（${appConfig.timeLimit}分）内に全問解答してください。`;
+    }
+};
+
+function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
+
+function startExam() {
+    document.getElementById('start-container').style.display = 'none';
+    document.getElementById('exam-container').style.display = 'flex';
+    
+    examStartTime = Date.now(); 
+    
+    let allQuestions = JSON.parse(JSON.stringify(originalQuizData));
+    
+    if (appConfig.mode === "practice") {
+        const selectedCategory = document.getElementById("category-select").value;
+        if (selectedCategory !== "all") {
+            allQuestions = allQuestions.filter(q => (q.category ? q.category.toString() : "未分類") === selectedCategory);
+        }
+    }
+    
+    shuffle(allQuestions);
+    
+    const countSelect = document.getElementById("question-count-select").value;
+    let targetCount = allQuestions.length;
+    if (countSelect !== "all") {
+        targetCount = Math.min(parseInt(countSelect), allQuestions.length);
+    }
+    
+    quizData = allQuestions.slice(0, targetCount);
+    quizData.forEach(q => {
+        shuffle(q.options);
+    });
+    if (appConfig.mode === "mock") {
+        buildPalette();
+        timeRemaining = appConfig.timeLimit * 60;
+        startExamTimer();
+    }
+    loadQuestion();
+}
+
+function buildPalette() {
+    const grid = document.getElementById('palette-grid');
+    grid.innerHTML = '';
+    quizData.forEach((_, index) => {
+        const item = document.createElement('div');
+        item.className = 'palette-item';
+        item.id = `palette-${index}`;
+        item.innerText = index + 1;
+        item.onclick = () => jumpToQuestion(index);
+        grid.appendChild(item);
+    });
+}
+
+function updatePaletteStatus() {
+    if (appConfig.mode !== "mock") return;
+    quizData.forEach((_, index) => {
+        const item = document.getElementById(`palette-${index}`);
+        if (!item) return;
+        item.className = 'palette-item';
+        if (index === currentQuestionIndex) item.classList.add('current');
+        if (userAnswers[index] !== undefined) item.classList.add('answered');
+        if (flaggedQuestions[index]) item.classList.add('flagged');
+    });
+}
+
+function loadQuestion() {
+    if (quizData.length === 0) return;
+    const currentQuestion = quizData[currentQuestionIndex];
+    document.getElementById('progress').innerText = `問題 ${currentQuestionIndex + 1} / ${quizData.length}`;
+    document.getElementById('category-display').innerText = `【${currentQuestion.category || "未分類"}】`;
+    
+    document.getElementById('question-text').innerHTML = formatText(currentQuestion.question);
+    
+    const optionsContainer = document.getElementById('options-container');
+    optionsContainer.innerHTML = '';
+    optionsContainer.className = `options layout-${appConfig.layout || 'normal'}`;
+    
+    const feedbackPanel = document.getElementById("instant-feedback");
+    feedbackPanel.style.display = "none";
+    feedbackPanel.innerHTML = "";
+    const correctOption = currentQuestion.options.find(o => o.isCorrect);
+    
+    currentQuestion.options.forEach((option, index) => {
+        const button = document.createElement('button');
+        button.className = 'option-btn';
+        
+        button.innerHTML = `<span class="option-num">${index + 1}</span><div class="option-text">${formatText(option.text)}</div>`;
+        
+        if (appConfig.mode === "mock") {
+            if (userAnswers[currentQuestionIndex] === index) button.classList.add('selected');
+            button.onclick = () => selectOption(index);
+        } else {
+            if (userAnswers[currentQuestionIndex] !== undefined) {
+                if (option.isCorrect) button.classList.add('correct');
+                if (userAnswers[currentQuestionIndex] === index && !option.isCorrect) button.classList.add('incorrect');
+                button.disabled = true;
+            } else {
+                button.onclick = () => selectOption(index);
+            }
+        }
+        optionsContainer.appendChild(button);
+    });
+    if (appConfig.mode === "practice" && userAnswers[currentQuestionIndex] !== undefined) {
+        const selectedOption = currentQuestion.options[userAnswers[currentQuestionIndex]];
+        const isCorrect = selectedOption ? selectedOption.isCorrect : false;
+        feedbackPanel.style.display = "block";
+        
+        feedbackPanel.innerHTML = `<strong>${isCorrect ? "◯ 正解！" : "✕ 不正解..."}</strong><br><br><strong>解説:</strong><br>${correctOption ? formatText(correctOption.rationale) : "解説はありません。"}`;
+    }
+
+    const flagBtn = document.getElementById('flag-button');
+    if (flagBtn) {
+        if (flaggedQuestions[currentQuestionIndex]) {
+            flagBtn.classList.add('flagged');
+        } else {
+            flagBtn.classList.remove('flagged');
+        }
+    }
+
+    updatePaletteStatus();
+}
+
+function selectOption(selectedIndex) {
+    userAnswers[currentQuestionIndex] = selectedIndex;
+    if (appConfig.mode === "mock") {
+        const buttons = document.querySelectorAll('.option-btn');
+        buttons.forEach((btn, idx) => {
+            if (idx === selectedIndex) {
+                btn.classList.add('selected');
+            } else {
+                btn.classList.remove('selected');
+            }
+        });
+        updatePaletteStatus();
+    } else {
+        loadQuestion();
+    }
+}
+
+function scrollToTop() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function nextQuestion() { 
+    if (currentQuestionIndex < quizData.length - 1) { 
+        currentQuestionIndex++;
+        loadQuestion(); 
+        scrollToTop();
+    } 
+}
+
+function prevQuestion() { 
+    if (currentQuestionIndex > 0) { 
+        currentQuestionIndex--;
+        loadQuestion(); 
+        scrollToTop();
+    } 
+}
+
+function jumpToQuestion(index) { 
+    currentQuestionIndex = index; 
+    loadQuestion(); 
+    scrollToTop();
+}
+
+function toggleFlag() {
+    flaggedQuestions[currentQuestionIndex] = !flaggedQuestions[currentQuestionIndex];
+    loadQuestion();
+}
+
+// 【機能変更】引数 isAuto を追加し、誤クリック防止のガードロジックを実装
+function submitExam(isAuto = false) {
+    if (!isAuto) {
+        const unansweredCount = quizData.length - Object.keys(userAnswers).length;
+        let confirmMessage = "演習を終了して採点を行いますか？";
+        if (unansweredCount > 0) {
+            confirmMessage = `まだ未回答の問題が ${unansweredCount} 問あります。\n本当に演習を終了して採点を行いますか？`;
+        }
+        if (!confirm(confirmMessage)) {
+            return; 
+        }
+    }
+
+    if (timerInterval) clearInterval(timerInterval);
+    
+    
+    const totalElapsedMs = Date.now() - examStartTime;
+    const totalSeconds = Math.floor(totalElapsedMs / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    const totalTimeStr = `${minutes}分${seconds}秒`;
+
+    document.getElementById('exam-container').style.display = 'none';
+    document.getElementById('score-container').style.display = 'block';
+    
+    let finalScore = 0;
+    let reportDetails = "";
+    let catStats = {};
+    
+    const reviewList = document.getElementById('review-list');
+    reviewList.innerHTML = '';
+    quizData.forEach((question, idx) => {
+        const categoryName = question.category ? question.category.toString() : "未分類";
+        if (!catStats[categoryName]) catStats[categoryName] = { total: 0, correct: 0 };
+        catStats[categoryName].total++;
+
+        const selectedIdx = userAnswers[idx];
+        const correctOption = question.options.find(o => o.isCorrect);
+        const selectedOption = selectedIdx !== undefined ? question.options[selectedIdx] : null;
+        const isCorrect = selectedOption ? selectedOption.isCorrect : false;
+        
+        if (isCorrect) {
+            finalScore++;
+            catStats[categoryName].correct++;
+        }
+
+        const item = document.createElement('div');
+        item.className = 'review-item';
+        const statusClass = isCorrect ? 'review-status-correct' : 'review-status-incorrect';
+        const statusText = isCorrect ? '【正解】' : (selectedIdx === undefined ? '【未回答】' : '【不正解】');
+        
+        item.innerHTML = `
+            <div class="review-q">Q${idx + 1}. ${formatText(question.question)} <span class="${statusClass}">${statusText}</span></div>
+            <div class="review-ans">あなたの回答: <strong>${selectedOption ? formatText(selectedOption.text) : '（未回答）'}</strong></div>
+            ${!isCorrect && correctOption ? `<div class="review-ans" style="color: #2b6cb0;">正しい解答: <strong>${formatText(correctOption.text)}</strong></div>` : ''}
+            <div class="review-rationale">
+                <strong>正解の解説:</strong><br>
+                ${correctOption ? formatText(correctOption.rationale) : '解説はありません。'}
+            </div>
+        `;
+        reviewList.appendChild(item);
+
+        if (!isCorrect) {
+            let userAnsText = (selectedOption && selectedOption.text !== undefined) ? selectedOption.text : "（未回答）";
+            let correctAnsText = (correctOption && correctOption.text !== undefined) ? correctOption.text : "不明";
+            reportDetails += `[問${idx + 1}] \n・カテゴリ: ${categoryName}\n・問題文: ${question.question}\n・あなたの解答: ${userAnsText}\n・正解: ${correctAnsText}\n・解説: ${correctOption ? correctOption.rationale : "なし"}\n\n`;
+        }
+    });
+    document.getElementById('final-score').innerText = `${finalScore} / ${quizData.length} 問正解`;
+    const scorePercent = quizData.length > 0 ? Math.round((finalScore / quizData.length) * 100) : 0;
+    const modeLabel = appConfig.mode === "mock" ? "模擬試験" : "練習ドリル";
+    
+    let report = `あなたは優秀なAIメンターです。以下に添付した私のCBT（${modeLabel}）の結果ログを分析し、以下の2点を行ってください。\n`;
+    report += `1. 私が間違えた問題の解説を、専門用語を補足しながらさらに噛み砕いてCanvas上でレビューしてください。\n`;
+    report += `2. 私の弱点傾向（正解率の低いカテゴリ）を分析し、その分野に関する新しい類似問題を3問作成し、私が回答できるようにCanvas上で出題してください。\n\n`;
+    report += `--- 以下、解答レポート ---\n`;
+    report += `■ 基本情報\n・実施モード: ${modeLabel}\n・実施日時: ${new Date().toLocaleString()}\n・総実施時間: ${totalTimeStr}\n・総合スコア: ${scorePercent}点\n\n■ カテゴリ別正解率\n`;
+    for (let cat in catStats) {
+        let rate = catStats[cat].total > 0 ? Math.round((catStats[cat].correct / catStats[cat].total) * 100) : 0;
+        report += `· ${cat}: ${rate}% (${catStats[cat].correct}/${catStats[cat].total})\n`;
+    }
+    
+    report += `\n■ 不正解問題の詳細\n${reportDetails || "なし（満点です！）"}`;
+    document.getElementById('report-text').value = report;
+}
+
+function copyReport() {
+    const txt = document.getElementById("report-text");
+    txt.select();
+    document.execCommand("copy");
+    showToast("レポートをクリップボードにコピーしました。");
+}
+</script>
+</body>
+</html>
